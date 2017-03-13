@@ -19,10 +19,12 @@ def po_attack_2blocks(po, ctx):
     P = ''
     # [WIP]: Implement padding oracle attack for 2 blocks of messages.
     # Convesion: Uppercase: Bytes in an string; Lowercase: Byte in an integer
-   
+    
+    '''    
+    # C0_prime, C1_prime = C0, C1
     for c0_prime in xrange(256):
         pad = 1
-        if ord(C0[-pad]) == c0_prime: continue # skip the original value
+        if ord(C0[-pad]) == c0_prime: continue #skip the original value
         C0_prime = C0[:-pad] + chr(c0_prime)
         if po.decrypt(C0_prime + C1) :
             i = c0_prime ^ pad
@@ -30,27 +32,37 @@ def po_attack_2blocks(po, ctx):
             print p
             pudb.set_trace()
             break
-
     '''
+    I = chr(0) * po.block_length
+    C0_prime = C0
     for pad in xrange(po.block_length): #interate through the each bytes in the block        
+
         if pad == 0:             
-            #[TOOD] Add the case where pad =0 add a new block
+            #[TODO] Add the case where pad =0 add a new block
             continue
-        for p_prime in xrange(256):   #interate through all the possible guesses         
-            Pad = chr(pad)*pad
-            padded_p_prime = chr(p_prime)+chr(0)*(pad-1)
-            C0_prime_lastbytes = xor(padded_p_prime, Pad)
-            C0_prime_lastbytes = xor(C0_prime_lastbytes, C0[-pad:])
-            C0_prime = C0[:-pad] + C0_prime_lastbytes
+        elif pad > 1:
+            # XOR C0_prime[-pad+1:] with I[-pad+1:]
+            # C0_prime = C0_prime[:-pad] + xor(C0_prime[-(pad-1):], chr(1)*(pad-1))
+            C0_prime = C0_prime[:-(pad-1)] + xor(I[-(pad-1):], chr(pad)*(pad-1)) # Alternatively
+
+        for c0_prime in xrange(256):   #interate through all the possible guesses         
+            if ord(C0_prime[-pad]) == c0_prime: continue #skip the original value
+            # C0_prime = C0[:-pad] + chr(c0_prime) + C0[-pad+1:]
+
+            # Guessing c0_prime at C0_prime[-pad]
+            C0_prime_list = list(C0_prime)
+            C0_prime_list[-pad] = chr(c0_prime)
+            C0_prime = ''.join(C0_prime_list)
+
             if po.decrypt(C0_prime + C1):
-                c0, c0_prime = ord(C0[-pad]), ord(C0_prime[-pad])
-                # i = p_prime ^ c0_prime
-                # p = c0 ^ i'                
-                p = p_prime ^ pad
+                I_list = list(I)
+                I_list[-pad] = chr(c0_prime ^ pad)
+                I = ''.join(I_list)
+
+                p = ord(I[-pad]) ^ ord(C0[-pad])
                 P = chr(p)+ P 
                 pudb.set_trace()
                 break
-    '''           
     return P
 
 def po_attack(po, ctx):
