@@ -19,23 +19,38 @@ def po_attack_2blocks(po, ctx):
     P = ''
     # [WIP]: Implement padding oracle attack for 2 blocks of messages.
     # Convesion: Uppercase: Bytes in an string; Lowercase: Byte in an integer
+   
+    for c0_prime in xrange(256):
+        pad = 1
+        if ord(C0[-pad]) == c0_prime: continue # skip the original value
+        C0_prime = C0[:-pad] + chr(c0_prime)
+        if po.decrypt(C0_prime + C1) :
+            i = c0_prime ^ pad
+            p = i ^ ord(C0[-pad])
+            print p
+            pudb.set_trace()
+            break
+
+    '''
     for pad in xrange(po.block_length): #interate through the each bytes in the block        
         if pad == 0:             
             #[TOOD] Add the case where pad =0 add a new block
             continue
         for p_prime in xrange(256):   #interate through all the possible guesses         
-            Pad = ''.join([chr(pad) for k in xrange(pad)])
+            Pad = chr(pad)*pad
             padded_p_prime = chr(p_prime)+chr(0)*(pad-1)
             C0_prime_lastbytes = xor(padded_p_prime, Pad)
             C0_prime_lastbytes = xor(C0_prime_lastbytes, C0[-pad:])
             C0_prime = C0[:-pad] + C0_prime_lastbytes
             if po.decrypt(C0_prime + C1):
-                pudb.set_trace() 
                 c0, c0_prime = ord(C0[-pad]), ord(C0_prime[-pad])
-                i = p_prime ^ c0_prime
-                p = c0 ^ i
-                P = chr(p) + P
+                # i = p_prime ^ c0_prime
+                # p = c0 ^ i'                
+                p = p_prime ^ pad
+                P = chr(p)+ P 
+                pudb.set_trace()
                 break
+    '''           
     return P
 
 def po_attack(po, ctx):
