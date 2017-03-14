@@ -33,17 +33,18 @@ def po_attack_2blocks(po, ctx):
             pudb.set_trace()
             break
     '''
-    I = chr(0) * po.block_length
+    I = ''.join(chr(0) * po.block_length)
     C0_prime = C0
-    for pad in xrange(po.block_length): #interate through the each bytes in the block        
+    print '=== Launching Oracle Attacks ==='
+    for pad in xrange(1, po.block_length + 1): #interate through the each bytes in the block        
 
-        if pad == 0:             
-            #[TODO] Add the case where pad =0 add a new block
-            continue
-        elif pad > 1:
-            # XOR C0_prime[-pad+1:] with I[-pad+1:]
-            # C0_prime = C0_prime[:-pad] + xor(C0_prime[-(pad-1):], chr(1)*(pad-1))
-            C0_prime = C0_prime[:-(pad-1)] + xor(I[-(pad-1):], chr(pad)*(pad-1)) # Alternatively
+        # if pad == 0:             
+        #     #[TODO] Add the case where pad =0 add a new block
+        #     continue
+
+        # XOR C0_prime[-pad+1:] with I[-pad+1:]
+        # C0_prime = C0_prime[:-(pad-1)] + ''.join([chr(ord(c0)+1) for c0 in C0_prime[-(pad-1):]])
+        C0_prime = C0_prime[:-pad] + xor(I[-pad:], chr(pad)*pad) # Alternatively
 
         for c0_prime in xrange(256):   #interate through all the possible guesses         
             if ord(C0_prime[-pad]) == c0_prime: continue #skip the original value
@@ -60,9 +61,11 @@ def po_attack_2blocks(po, ctx):
                 I = ''.join(I_list)
 
                 p = ord(I[-pad]) ^ ord(C0[-pad])
-                P = chr(p)+ P 
-                pudb.set_trace()
+                P = chr(p) + P 
+                # pudb.set_trace()
+                print pad, '\t',c0_prime,'\t', p, '\t', list(P)
                 break
+
     return P
 
 def po_attack(po, ctx):
@@ -104,3 +107,5 @@ def test_poserver_attack():
     ctx = po.ciphertext()
     msg = po_attack(po, ctx)
     print msg
+
+test_po_attack_2blocks() #[TODO To be commented
