@@ -35,35 +35,38 @@ def po_attack_2blocks(po, ctx):
     '''
     I = ''.join(chr(0) * po.block_length)
     C0_prime = C0
-    print '=== Launching Oracle Attacks ==='
-    for pad in xrange(1, po.block_length + 1): #interate through the each bytes in the block        
-
-        # if pad == 0:             
-        #     #[TODO] Add the case where pad =0 add a new block
-        #     continue
-
+    # print '=== Launching Oracle Attacks ==='
+    #interate through the each bytes in the block
+    for pad in xrange(1, po.block_length + 1): 
         # XOR C0_prime[-pad+1:] with I[-pad+1:]
-        # C0_prime = C0_prime[:-(pad-1)] + ''.join([chr(ord(c0)+1) for c0 in C0_prime[-(pad-1):]])
-        C0_prime = C0_prime[:-pad] + xor(I[-pad:], chr(pad)*pad) # Alternatively
+        C0_prime = C0_prime[:-pad] + xor(I[-pad:], chr(pad)*pad) 
 
-        for c0_prime in xrange(256):   #interate through all the possible guesses         
-            if ord(C0_prime[-pad]) == c0_prime: continue #skip the original value
-            # C0_prime = C0[:-pad] + chr(c0_prime) + C0[-pad+1:]
+        #interate through all the possible guesses
+        for c0_prime in xrange(256):        
+            #skip the original value    
+            if ord(C0_prime[-pad]) == c0_prime: continue 
 
             # Guessing c0_prime at C0_prime[-pad]
             C0_prime_list = list(C0_prime)
             C0_prime_list[-pad] = chr(c0_prime)
             C0_prime = ''.join(C0_prime_list)
 
-            if po.decrypt(C0_prime + C1):
+            P_prime = C0_prime + C1
+            if po.decrypt(P_prime):
+                # To ensure the guessed last byte is indeed \x01, rather than \x01, \x02 etc... 
+                if pad == 1:
+                    C0_prime_list_test = list(C0_prime)
+                    C0_prime_list_test[-2] = chr(ord(C0_prime_list_test[-2]) ^ 1)
+                    C0_prime_test = ''.join(C0_prime_list_test) 
+                    P_prime_test = C0_prime_test + C1
+                    if not po.decrypt(P_prime_test): continue
                 I_list = list(I)
                 I_list[-pad] = chr(c0_prime ^ pad)
                 I = ''.join(I_list)
 
                 p = ord(I[-pad]) ^ ord(C0[-pad])
                 P = chr(p) + P 
-                # pudb.set_trace()
-                print pad, '\t',c0_prime,'\t', p, '\t', list(P)
+                # print pad, '\t',c0_prime,'\t', p, '\t', list(P),'\t'
                 break
 
     return P
