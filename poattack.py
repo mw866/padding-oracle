@@ -17,22 +17,9 @@ def po_attack_2blocks(po, ctx):
         "cipher texts. Got {} block(s)!".format(len(ctx)/po.block_length)
     C0, C1 = list(split_into_blocks(ctx, po.block_length))
     P = ''
-    # [WIP]: Implement padding oracle attack for 2 blocks of messages.
-    # Convesion: Uppercase: Bytes in an string; Lowercase: Byte in an integer
+    # [Completed]: Implement padding oracle attack for 2 blocks of messages.
+    # Naming Convention: Uppercase: Bytes in an string; Lowercase: Byte in an integer
     
-    '''    
-    # C0_prime, C1_prime = C0, C1
-    for c0_prime in xrange(256):
-        pad = 1
-        if ord(C0[-pad]) == c0_prime: continue #skip the original value
-        C0_prime = C0[:-pad] + chr(c0_prime)
-        if po.decrypt(C0_prime + C1) :
-            i = c0_prime ^ pad
-            p = i ^ ord(C0[-pad])
-            print p
-            pudb.set_trace()
-            break
-    '''
     I = ''.join(chr(0) * po.block_length)
     C0_prime = C0
     # print '=== Launching Oracle Attacks ==='
@@ -80,8 +67,13 @@ def po_attack(po, ctx):
     """
     ctx_blocks = list(split_into_blocks(ctx, po.block_length))
     nblocks = len(ctx_blocks)
-    # TODO: Implement padding oracle attack for arbitrary length message.
-
+    # WIP: Implement padding oracle attack for arbitrary length message.
+    P = ""
+    for i in xrange(nblocks-1):
+        ctx_2blocks = ctx_blocks[i] + ctx_blocks[i+1]
+        p = po_attack_2blocks(po, ctx_2blocks)
+        P = P + p
+    return P
 
     
 ################################################################################
@@ -101,6 +93,7 @@ def test_po_attack():
         ctx = po.setup()
         msg = po_attack(po, ctx)
         assert po.test(msg), "Failed 'po_attack' for msg of length={}".format(i)
+        print 'Success i=',i # [TODO] To delete
 
 def test_poserver_attack():
     # You may want to put some print statement in the code to see the
@@ -111,4 +104,4 @@ def test_poserver_attack():
     msg = po_attack(po, ctx)
     print msg
 
-test_po_attack_2blocks() #[TODO To be commented
+test_po_attack() #[TODO To be commented
