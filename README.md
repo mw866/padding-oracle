@@ -1,9 +1,11 @@
 # Padding Oracle Attacks
 Description: Python implementation of Padding Oracle Attack against CBC-mode block cipher.
 
-## Instruction
+## Usage
 
-* Test: `py.test --ignore=my-venv poattack.py`
+* Test: `py.test -s --ignore=my-venv poattack.py`
+
+* Debug: `python -m gudb poattack.py`
 
 ## Installation
 
