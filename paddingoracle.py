@@ -94,9 +94,9 @@ class PaddingOracleServer(object):
         return self._block_size_bytes
 
     def decrypt(self, ctx):
+        # Show progress in stdout
         sys.stdout.write('.')
         sys.stdout.flush()
-        # print "Server is descrypting: ", list(ctx)
         dec_url = url + "decrypt/{}".format(base64.urlsafe_b64encode(ctx))
         ret = json.load(urlopen(dec_url))
         return ret['return'] == 0
