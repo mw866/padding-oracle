@@ -1,5 +1,7 @@
 from paddingoracle import PaddingOracle, PaddingOracleServer, xor
 import pudb
+import time
+
 
 def split_into_blocks(msg, l):
     while msg:
@@ -22,15 +24,16 @@ def po_attack_2blocks(po, ctx):
     
     I = ''.join(chr(0) * po.block_length)
     C0_prime = C0
-    # print '=== Launching Oracle Attacks ==='
+    print '--- Launching Padding Oracle Attacks ---'
+    print 'pad\tc0_prime\tp\tP\t'
     #interate through the each bytes in the block
     for pad in xrange(1, po.block_length + 1): 
         # XOR C0_prime[-pad+1:] with I[-pad+1:]
         C0_prime = C0_prime[:-pad] + xor(I[-pad:], chr(pad)*pad) 
 
-        #interate through all the possible guesses
+        #Interate through all the possible guesses
         for c0_prime in xrange(256):        
-            #skip the original value    
+            #Skip the original value    
             if ord(C0_prime[-pad]) == c0_prime: continue 
 
             # Guessing c0_prime at C0_prime[-pad]
@@ -40,7 +43,7 @@ def po_attack_2blocks(po, ctx):
 
             P_prime = C0_prime + C1
             if po.decrypt(P_prime):
-                # To ensure the guessed last byte is indeed \x01, rather than \x01, \x02 etc... 
+                # Ensure the guessed last byte is indeed \x01, rather than \x01, \x02 etc... 
                 if pad == 1:
                     C0_prime_list_test = list(C0_prime)
                     C0_prime_list_test[-2] = chr(ord(C0_prime_list_test[-2]) ^ 1)
@@ -53,7 +56,7 @@ def po_attack_2blocks(po, ctx):
 
                 p = ord(I[-pad]) ^ ord(C0[-pad])
                 P = chr(p) + P 
-                # print pad, '\t',c0_prime,'\t', p, '\t', list(P),'\t'
+                print '\n', pad, '\t',c0_prime,'\t', p, '\t', list(P),'\t'
                 break
 
     return P
@@ -65,14 +68,21 @@ def po_attack(po, ctx):
     @ctx: a ciphertext generated using po.setup()
     You don't have to unpad the message.
     """
+
     ctx_blocks = list(split_into_blocks(ctx, po.block_length))
     nblocks = len(ctx_blocks)
-    # WIP: Implement padding oracle attack for arbitrary length message.
+    # Completed: Implement padding oracle attack for arbitrary length message.
     P = ""
     for i in xrange(nblocks-1):
+        print '\n=== Block: {}/{} ==='.format(i, nblocks)
+        t_start = time.time()
+
         ctx_2blocks = ctx_blocks[i] + ctx_blocks[i+1]
         p = po_attack_2blocks(po, ctx_2blocks)
-        P = P + p
+        P = P + p 
+
+        t_end = time.time() 
+        print 'Time: {}s'.format(nblocks, t_end-t_start) 
     return P
 
     
@@ -89,19 +99,24 @@ def test_po_attack_2blocks():
 
 def test_po_attack():
     for i in xrange(1000):
+        t_start = time.time()
+
         po = PaddingOracle(msg_len=i)
         ctx = po.setup()
         msg = po_attack(po, ctx)
         assert po.test(msg), "Failed 'po_attack' for msg of length={}".format(i)
-        print 'Success i=',i # [TODO] To delete
+        
+        t_end = time.time() # Added
+        t = t_end-t_start   # Added
+        if i !=0: print 'Message Length: {}\t Time: {}s\t Time/Byte: {}'.format(i, t, t/float(i)) # Added
 
 def test_poserver_attack():
     # You may want to put some print statement in the code to see the
-    # progress. This attack might 10.218.176.10take upto an hour to complete. 
+    # progress. This attack might take upto an hour to complete. 
 
     po = PaddingOracleServer()
     ctx = po.ciphertext()
     msg = po_attack(po, ctx)
     print msg
 
-test_po_attack() #[TODO To be commented
+test_poserver_attack() #[TODO To be commented

@@ -6,6 +6,8 @@ from cryptography.hazmat.backends import default_backend
 import base64
 import binascii
 
+import sys
+
 def xor(a,b):
     """
     xors two raw byte streams.
@@ -92,7 +94,9 @@ class PaddingOracleServer(object):
         return self._block_size_bytes
 
     def decrypt(self, ctx):
-        #print "In decrypt!!!"
+        sys.stdout.write('.')
+        sys.stdout.flush()
+        # print "Server is descrypting: ", list(ctx)
         dec_url = url + "decrypt/{}".format(base64.urlsafe_b64encode(ctx))
         ret = json.load(urlopen(dec_url))
         return ret['return'] == 0
